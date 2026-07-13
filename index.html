@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="广东考公热点资讯与申论面试素材积累平台">
+  <title>南粤政声 · 广东考公时政素材库</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="topline" aria-hidden="true"></div>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="brand" href="index.html" aria-label="南粤政声首页">
+        <span class="brand-mark">粤</span>
+        <span class="brand-copy"><strong>南粤政声</strong><small>广东考公时政素材库</small></span>
+      </a>
+      <div class="edition">
+        <span id="currentDate"></span>
+        <span class="edition-divider"></span>
+        <span id="updateInfo">正在读取今日资讯</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="main-nav" aria-label="主导航">
+    <div class="nav-inner">
+      <div class="mode-tabs" id="modeTabs" role="tablist" aria-label="资讯时间范围">
+        <button class="mode-tab active" data-mode="today" role="tab" aria-selected="true">今日要闻</button>
+        <button class="mode-tab" data-mode="explore" role="tab" aria-selected="false">专题探索</button>
+        <button class="mode-tab" data-mode="history" role="tab" aria-selected="false">往期回顾</button>
+      </div>
+      <div class="backup-btns">
+        <button type="button" data-action="export" class="nav-action">导出收藏</button>
+        <button type="button" data-action="import" class="nav-action">导入收藏</button>
+        <span id="backupHint" class="backup-hint" hidden>记得定期备份</span>
+      </div>
+    </div>
+  </nav>
+
+  <section class="filter-panel" id="filterPanel" aria-label="搜索与分类">
+    <div class="filter-inner">
+      <label class="search-box">
+        <span>检索</span>
+        <input type="search" id="searchInput" placeholder="输入标题、正文或政策关键词" autocomplete="off">
+      </label>
+      <div class="category-tabs" id="categoryTabs" role="group" aria-label="资讯分类">
+        <button class="cat-tab active" data-cat="all">全部 <span id="countAll">0</span></button>
+        <button class="cat-tab" data-cat="政策">政策 <span id="countPolicy">0</span></button>
+        <button class="cat-tab" data-cat="经济">经济 <span id="countEconomy">0</span></button>
+        <button class="cat-tab" data-cat="民生">民生 <span id="countLivelihood">0</span></button>
+        <button class="cat-tab" data-cat="生态">生态 <span id="countEcology">0</span></button>
+        <button class="cat-tab" data-cat="科技">科技 <span id="countTech">0</span></button>
+        <button class="cat-tab" data-cat="文化">文化 <span id="countCulture">0</span></button>
+      </div>
+    </div>
+  </section>
+
+  <main class="main">
+    <section class="lead" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">学习 · 思考 · 积累</p>
+        <h1 id="pageTitle">读懂南粤大事，写好申论文章</h1>
+        <p>聚合广东权威资讯，提炼政策关键词、考点要点与表达素材。</p>
+      </div>
+      <div class="stats-row" aria-label="今日数据概览">
+        <div class="stat"><strong id="statHigh">0</strong><span>高相关热点</span></div>
+        <div class="stat"><strong id="statTotal">0</strong><span>今日资讯</span></div>
+        <button type="button" class="stat stat-button" id="collectionFilter" aria-pressed="false" title="查看已收藏素材">
+          <strong id="statCollected">0</strong><span>已收藏素材</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="learning-desk" id="learningDesk" aria-labelledby="learningDeskTitle">
+      <div class="learning-desk-heading">
+        <div><p class="eyebrow">今日学习台</p><h2 id="learningDeskTitle">从权威信息到答题能力</h2></div>
+        <p>按“政策—实践—评论—练习”完成今日学习闭环</p>
+      </div>
+      <div class="learning-desk-grid" id="learningDeskGrid"></div>
+    </section>
+
+    <section class="explore-panel" id="explorePanel" hidden aria-labelledby="exploreTitle">
+      <div class="explore-heading">
+        <div><p class="eyebrow">专题知识库</p><h2 id="exploreTitle">沿着主题脉络，读懂广东治理</h2><p>汇总今日与往期资料，把零散新闻整理成可连续学习的知识专题。</p></div>
+        <button type="button" id="randomTopic">随便看看</button>
+      </div>
+      <div class="topic-grid" id="topicGrid" aria-label="专题列表"></div>
+      <div class="topic-current" id="topicCurrent" hidden></div>
+    </section>
+
+    <section class="history-bar" id="historyBar" hidden aria-label="历史日期">
+      <div class="history-inner" id="historyDates"></div>
+    </section>
+
+    <section class="material-tools" id="materialTools" hidden aria-label="素材库筛选">
+      <div class="material-progress" aria-label="学习进度">
+        <span>未学习 <strong id="progressUnread">0</strong></span>
+        <span>学习中 <strong id="progressLearning">0</strong></span>
+        <span>已掌握 <strong id="progressMastered">0</strong></span>
+      </div>
+      <label>掌握状态
+        <select id="materialStatusFilter">
+          <option value="all">全部</option><option value="unread">未学习</option>
+          <option value="learning">学习中</option><option value="mastered">已掌握</option>
+        </select>
+      </label>
+      <label>重要程度
+        <select id="materialPriorityFilter">
+          <option value="all">全部</option><option value="high">重点</option>
+          <option value="medium">常规</option><option value="low">拓展</option>
+        </select>
+      </label>
+      <label class="material-tag-search">标签
+        <input id="materialTagFilter" type="search" placeholder="如：基层治理">
+      </label>
+      <button type="button" class="reset-filter" id="resetMaterialFilters">重置筛选</button>
+    </section>
+
+    <div class="section-heading"><span id="listTitle">权威资讯</span><small id="listHint">点击文章可展开考点分析</small></div>
+    <section class="news-list" id="newsList" aria-live="polite"></section>
+    <div class="empty-state" id="emptyState" hidden><strong>暂无匹配资讯</strong><span>请尝试其他关键词或分类</span></div>
+  </main>
+
+  <footer class="footer">
+    <strong>南粤政声</strong>
+    <span>每日更新广东热点，助你积累申论与面试素材</span>
+    <span>数据来源：广东省政府网、人民网广东、南方网</span>
+  </footer>
+
+  <dialog class="material-dialog" id="materialDialog" aria-labelledby="materialDialogTitle">
+    <form method="dialog" id="materialForm">
+      <div class="dialog-heading">
+        <div><small>个人素材库</small><h2 id="materialDialogTitle">整理收藏素材</h2></div>
+        <button type="button" class="dialog-close" data-action="close-material" aria-label="关闭">×</button>
+      </div>
+      <p class="dialog-article-title" id="materialArticleTitle"></p>
+      <input type="hidden" id="materialArticleId">
+      <div class="form-grid">
+        <label>掌握状态<select id="materialStatus"><option value="unread">未学习</option><option value="learning">学习中</option><option value="mastered">已掌握</option></select></label>
+        <label>重要程度<select id="materialPriority"><option value="high">重点</option><option value="medium">常规</option><option value="low">拓展</option></select></label>
+      </div>
+      <label>素材标签<input id="materialTags" type="text" placeholder="多个标签用逗号分隔，如：基层治理，乡村振兴"></label>
+      <label>我的笔记<textarea id="materialNote" rows="6" placeholder="记录可引用的数据、答题角度或自己的理解……"></textarea></label>
+      <div class="dialog-actions"><button type="button" data-action="close-material">取消</button><button type="submit" class="primary-action">保存素材</button></div>
+    </form>
+  </dialog>
+
+  <script src="js/news_data.js"></script>
+  <script src="js/history_index.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
