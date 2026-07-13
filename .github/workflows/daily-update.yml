@@ -1,6 +1,9 @@
 name: Daily news update and deploy
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     # GitHub uses UTC. 00:00 UTC is 08:00 in Asia/Shanghai.
     - cron: "0 0 * * *"
@@ -36,9 +39,11 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Fetch latest news
+        if: github.event_name != 'push'
         run: python fetch_news.py
 
       - name: Commit updated data
+        if: github.event_name != 'push'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
