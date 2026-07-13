@@ -166,26 +166,6 @@ button { cursor: pointer; }
 .interview-outline { background: #f9f6ef; }
 .knowledge-keywords { display: flex; flex-wrap: wrap; gap: 7px; }
 .knowledge-keywords span { padding: 3px 9px; color: var(--red-dark); background: #f4dfdc; font-size: 12px; }
-.writing-lab { padding: 18px; display: grid; gap: 14px; background: #fffdf7; border: 1px solid #d9cbae; }
-.writing-lab-heading { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
-.writing-lab-heading small { color: var(--red); font-weight: 700; letter-spacing: 2px; }
-.writing-lab-heading h3 { margin: 2px 0 0; font: 700 19px var(--serif); }
-.writing-lab-heading > span { padding: 3px 7px; color: #7b6c59; background: #f0e7d6; font-size: 11px; }
-.argument-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
-.argument-flow div { position: relative; padding: 11px 10px 11px 35px; color: #625a50; background: #f2eee6; font-size: 12px; }
-.argument-flow b { position: absolute; left: 10px; top: 10px; width: 18px; height: 18px; display: grid; place-items: center; color: #fff; background: var(--red); border-radius: 50%; font-size: 10px; }
-.sentence-study { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.sentence-study > div { padding: 12px 14px; background: #f7f1e6; border-left: 3px solid var(--gold); }
-.sentence-study small { color: #8a7353; font-weight: 700; }
-.sentence-study p { margin: 5px 0 0; font: 600 15px/1.7 var(--serif); }
-.writing-practice { padding-top: 12px; border-top: 1px dotted #c9bda9; }
-.writing-practice label { color: var(--red-dark); font-weight: 700; }
-.writing-practice > p { margin: 4px 0 9px; color: var(--muted); font-size: 12px; }
-.writing-input { width: 100%; padding: 10px 12px; resize: vertical; color: var(--ink); background: #fff; border: 1px solid #cfc2ae; outline: none; font: 14px/1.7 var(--serif); }
-.writing-input:focus { border-color: var(--red); box-shadow: 0 0 0 2px rgba(181,22,27,.1); }
-.writing-practice > div { margin-top: 7px; display: flex; align-items: center; justify-content: space-between; }
-.writing-count { color: var(--muted); font-size: 11px; }
-.save-writing-btn { padding: 6px 13px; color: #fff; background: var(--red); border: 0; }
 .exam-mapping { padding: 18px; display: grid; gap: 13px; background: #f4f0e8; border: 1px solid #d5ccbe; border-top: 3px solid #765b39; }
 .exam-mapping-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
 .exam-mapping-heading small { color: #775930; font-weight: 700; letter-spacing: 2px; }
@@ -290,7 +270,5 @@ button { cursor: pointer; }
   .explore-heading { padding: 21px 18px; align-items: start; flex-direction: column; }
   .topic-grid { grid-template-columns: 1fr; }
   .topic-card { min-height: 120px; }
-  .argument-flow, .sentence-study { grid-template-columns: 1fr; }
-  .writing-lab-heading { flex-direction: column; gap: 7px; }
   .exam-mapping-heading { flex-direction: column; gap: 7px; }
 }

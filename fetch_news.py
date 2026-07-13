@@ -203,26 +203,6 @@ def generate_key_points(title: str, summary: str, keywords: list) -> list:
     return points[:4]
 
 
-def build_writing_lab(title: str, category: str) -> dict:
-    """生成申论表达训练；示范句均为平台整理，不冒充媒体原文。"""
-    templates = {
-        "政策": ("制度的生命力在于执行，政策的含金量要靠落实来检验。", "如何让好政策从纸面走进现实？关键在于细化责任、强化协同、跟踪问效。"),
-        "经济": ("产业兴则经济兴，产业强则发展强。", "以创新之力激活产业动能，以改革之举优化发展环境，才能不断塑造高质量发展新优势。"),
-        "民生": ("民生无小事，枝叶总关情。", "把群众的关键小事当作治理的大事，才能让发展更有温度、幸福更有质感。"),
-        "生态": ("生态是发展的底色，绿色是未来的成色。", "以高水平保护支撑高质量发展，方能让生态优势源源不断转化为发展优势。"),
-        "科技": ("创新是引领发展的第一动力。", "向科技创新要动力、向成果转化要效益，才能把创新变量转化为发展增量。"),
-        "文化": ("文脉赓续，方能弦歌不辍。", "在保护中传承、在创新中发展，才能让优秀传统文化焕发新的时代光彩。"),
-    }
-    pattern, model = templates.get(category, templates["政策"])
-    return {
-        "argument_structure": ["开篇点明主题与现实价值", "结合材料分析问题或发展条件", "从机制、协同、落实等角度提出路径", "回扣群众获得感或高质量发展升华主题"],
-        "sentence_pattern": pattern,
-        "model_sentence": model,
-        "imitation_prompt": f"围绕“{title}”，仿照示范表达写一句40—80字的申论句子。",
-        "provenance": "平台整理表达，非新闻媒体原文",
-    }
-
-
 def build_knowledge_card(title: str, summary: str, category: str,
                          keywords: list, key_points: list) -> dict:
     """把资讯加工为可复习、可用于申论和面试的结构化知识卡。"""
@@ -278,7 +258,6 @@ def build_knowledge_card(title: str, summary: str, category: str,
             "怎么落实：压实责任、完善机制、强化监督，并以群众满意度检验成效。",
         ],
         "keywords": keywords[:6],
-        "writing_lab": build_writing_lab(title, category),
     }
 
 

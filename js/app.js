@@ -2,7 +2,6 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const STORAGE_KEY = 'gd_exam_collections';
 const MATERIAL_STORAGE_KEY = 'gd_exam_materials';
-const WRITING_STORAGE_KEY = 'gd_exam_writing_practice';
 const EXAM_ANSWER_STORAGE_KEY = 'gd_exam_exam_answers';
 const CATEGORIES = {
   政策: 'Policy', 经济: 'Economy', 民生: 'Livelihood',
@@ -42,7 +41,6 @@ const state = {
   currentTopic: '',
   collections: loadCollections(),
   materials: loadMaterials(),
-  writingPractice: loadWritingPractice(),
   examAnswers: loadExamAnswers(),
   materialFilters: { status: 'all', priority: 'all', tag: '' },
   backupTimer: null
@@ -105,8 +103,8 @@ function bindEvents() {
   });
   $('#randomTopic').addEventListener('click', selectRandomTopic);
   document.addEventListener('input', event => {
-    if (!event.target.matches('.writing-input, .exam-answer-input')) return;
-    const counter = event.target.closest('.writing-practice, .exam-answer-box')?.querySelector('.writing-count, .exam-answer-count');
+    if (!event.target.matches('.exam-answer-input')) return;
+    const counter = event.target.closest('.exam-answer-box')?.querySelector('.exam-answer-count');
     if (counter) counter.textContent = `${event.target.value.length} 字`;
   });
 
@@ -147,12 +145,6 @@ function handleNewsClick(event) {
   if (copyButton) {
     event.stopPropagation();
     copyKnowledgeCard(copyButton.dataset.id);
-    return;
-  }
-  const writingButton = event.target.closest('.save-writing-btn');
-  if (writingButton) {
-    event.stopPropagation();
-    saveWritingPractice(writingButton.dataset.id);
     return;
   }
   const examAnswerButton = event.target.closest('.save-exam-answer-btn');
@@ -294,7 +286,6 @@ function renderKnowledgeCard(article) {
     </div>
     <section class="answer-expression"><h3>申论分论点</h3><blockquote>${escapeHtml(card.essay_thesis)}</blockquote></section>
     ${renderExamMapping(article, card)}
-    ${renderWritingLab(article, card.writing_lab)}
     ${section('面试答题框架', card.interview_outline, 'interview-outline')}
     <div class="knowledge-keywords">${(card.keywords || article.analysis?.keywords || []).map(keyword => `<span>${escapeHtml(keyword)}</span>`).join('')}</div>
   </div>`;
@@ -345,47 +336,6 @@ function saveExamAnswer(id) {
   else delete state.examAnswers[id];
   localStorage.setItem(EXAM_ANSWER_STORAGE_KEY, JSON.stringify(state.examAnswers));
   showToast(value ? '模拟作答已保存' : '已清空这次作答');
-}
-
-function getWritingLab(article, writingLab) {
-  if (writingLab) return writingLab;
-  const templates = {
-    政策: ['制度的生命力在于执行，政策的含金量要靠落实来检验。', '如何让好政策从纸面走进现实？关键在于细化责任、强化协同、跟踪问效。'],
-    经济: ['产业兴则经济兴，产业强则发展强。', '以创新之力激活产业动能，以改革之举优化发展环境，才能不断塑造高质量发展新优势。'],
-    民生: ['民生无小事，枝叶总关情。', '把群众的关键小事当作治理的大事，才能让发展更有温度、幸福更有质感。'],
-    生态: ['生态是发展的底色，绿色是未来的成色。', '以高水平保护支撑高质量发展，方能让生态优势源源不断转化为发展优势。'],
-    科技: ['创新是引领发展的第一动力。', '向科技创新要动力、向成果转化要效益，才能把创新变量转化为发展增量。'],
-    文化: ['文脉赓续，方能弦歌不辍。', '在保护中传承、在创新中发展，才能让优秀传统文化焕发新的时代光彩。']
-  };
-  const [pattern, model] = templates[article.category] || templates.政策;
-  return { argument_structure: ['开篇点明主题与现实价值', '结合材料分析问题或发展条件', '从机制、协同、落实等角度提出路径', '回扣群众获得感或高质量发展升华主题'], sentence_pattern: pattern, model_sentence: model, imitation_prompt: `围绕“${article.title}”，仿照示范表达写一句40—80字的申论句子。`, provenance: '平台整理表达，非新闻媒体原文' };
-}
-
-function renderWritingLab(article, writingLab) {
-  const lab = getWritingLab(article, writingLab);
-  const saved = state.writingPractice[article.id] || '';
-  const commentary = getSourceProfile(article).type === '权威评论';
-  return `<section class="writing-lab">
-    <div class="writing-lab-heading"><div><small>${commentary ? '权威评论拆解' : '申论表达训练'}</small><h3>从读懂观点到写出观点</h3></div><span>${escapeHtml(lab.provenance)}</span></div>
-    <div class="argument-flow">${lab.argument_structure.map((item, index) => `<div><b>${index + 1}</b><span>${escapeHtml(item)}</span></div>`).join('')}</div>
-    <div class="sentence-study"><div><small>句式模板</small><p>${escapeHtml(lab.sentence_pattern)}</p></div><div><small>平台示范</small><p>${escapeHtml(lab.model_sentence)}</p></div></div>
-    <div class="writing-practice"><label for="writing-${escapeHtml(article.id)}">仿写练习</label><p>${escapeHtml(lab.imitation_prompt)}</p><textarea class="writing-input" id="writing-${escapeHtml(article.id)}" rows="3" placeholder="在这里写下你的申论表达……">${escapeHtml(saved)}</textarea><div><span class="writing-count">${saved.length} 字</span><button type="button" class="save-writing-btn" data-id="${escapeHtml(article.id)}">保存仿写</button></div></div>
-  </section>`;
-}
-
-function loadWritingPractice() {
-  try { return JSON.parse(localStorage.getItem(WRITING_STORAGE_KEY)) || {}; }
-  catch (_) { return {}; }
-}
-
-function saveWritingPractice(id) {
-  const input = $(`#writing-${CSS.escape(String(id))}`);
-  if (!input) return;
-  const value = input.value.trim();
-  if (value) state.writingPractice[id] = value;
-  else delete state.writingPractice[id];
-  localStorage.setItem(WRITING_STORAGE_KEY, JSON.stringify(state.writingPractice));
-  showToast(value ? '仿写练习已保存' : '已清空这条仿写');
 }
 
 function deriveKnowledgeCard(article) {
@@ -730,7 +680,7 @@ function toggleCollect(id, button) {
 }
 
 function exportCollections() {
-  const backup = { version: 4, collections: Object.keys(state.collections), materials: state.materials, writingPractice: state.writingPractice, examAnswers: state.examAnswers };
+  const backup = { version: 4, collections: Object.keys(state.collections), materials: state.materials, examAnswers: state.examAnswers };
   const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
   const link = Object.assign(document.createElement('a'), { href: url, download: 'collections.json' });
   link.click();
@@ -752,11 +702,9 @@ function importCollections() {
           : Object.keys(data).filter(id => data[id] === true);
         ids.forEach(id => { state.collections[id] = true; });
         if (data.materials && typeof data.materials === 'object') state.materials = { ...state.materials, ...data.materials };
-        if (data.writingPractice && typeof data.writingPractice === 'object') state.writingPractice = { ...state.writingPractice, ...data.writingPractice };
         if (data.examAnswers && typeof data.examAnswers === 'object') state.examAnswers = { ...state.examAnswers, ...data.examAnswers };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state.collections));
         localStorage.setItem(MATERIAL_STORAGE_KEY, JSON.stringify(state.materials));
-        localStorage.setItem(WRITING_STORAGE_KEY, JSON.stringify(state.writingPractice));
         localStorage.setItem(EXAM_ANSWER_STORAGE_KEY, JSON.stringify(state.examAnswers));
         $('#statCollected').textContent = Object.keys(state.collections).length;
         showToast(`成功导入 ${ids.length} 条收藏`);
