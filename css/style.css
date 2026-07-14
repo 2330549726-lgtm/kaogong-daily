@@ -97,6 +97,12 @@ button { cursor: pointer; }
 .topic-current { margin-top: 22px; padding: 15px 20px; background: #eee8dc; border-left: 4px solid var(--red); }
 .topic-current strong { font: 700 19px var(--serif); }
 .topic-current span { margin-left: 10px; color: var(--muted); }
+.important-panel { margin-top: 22px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 25px; color: #fff; background: linear-gradient(120deg, #7f1014, #b5161b); border-bottom: 4px solid var(--gold); }
+.important-panel h2 { margin: 0; font: 700 27px var(--serif); }
+.important-panel p:last-child { margin: 7px 0 0; color: #edc8c5; }
+.important-count { min-width: 115px; text-align: center; }
+.important-count strong { display: block; font: 700 34px/1.1 var(--serif); }
+.important-count span { color: #edc8c5; font-size: 12px; }
 
 .section-heading { margin: 36px 0 14px; padding-bottom: 9px; display: flex; align-items: end; justify-content: space-between; border-bottom: 2px solid var(--ink); }
 .section-heading span { font: 800 23px var(--serif); }
@@ -108,6 +114,7 @@ button { cursor: pointer; }
 .news-card:hover { border-color: #bdb5a8; transform: translateY(-1px); }
 .news-card.expanded { border-top: 2px solid var(--red); }
 .news-card-header { display: flex; align-items: flex-start; gap: 18px; }
+.today-rank { padding: 2px 8px; color: #fff; background: var(--red); font-size: 11px; white-space: nowrap; }
 .news-title { flex: 1; font: 700 20px/1.55 var(--serif); }
 .relevance-badge, .cat-badge { white-space: nowrap; font-size: 11px; }
 .relevance-badge { padding: 2px 8px; border: 1px solid; }
@@ -120,6 +127,8 @@ button { cursor: pointer; }
 .source-profile-badge.level-5 { background: var(--red); }
 .source-profile-badge.level-4 { background: #8b6239; }
 .why-learn { margin-top: 11px; padding: 8px 11px; color: #6b6258; background: #f3eee5; border-left: 3px solid var(--gold); font-size: 12px; }
+.featured-reason { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.featured-reason span { padding: 3px 8px; color: #7a4c1f; background: #f3e4ca; border: 1px solid #dec7a2; font-size: 11px; }
 .cat-badge { padding: 1px 7px; color: #6d675f; background: #efebe3; }
 .news-content { margin-top: 14px; color: #55514b; }
 .news-content p { margin: 0 0 8px; text-indent: 2em; }
@@ -218,6 +227,7 @@ button { cursor: pointer; }
   .news-card.expanded .news-detail { grid-template-columns: 1fr; }
   .learning-desk-grid { grid-template-columns: 1fr 1fr; }
   .topic-grid { grid-template-columns: repeat(2, 1fr); }
+  .important-panel { align-items: flex-start; }
   .idioms-section { grid-column: auto; }
 }
 
@@ -248,4 +258,6 @@ button { cursor: pointer; }
   .explore-heading { padding: 21px 18px; align-items: start; flex-direction: column; }
   .topic-grid { grid-template-columns: 1fr; }
   .topic-card { min-height: 120px; }
+  .important-panel { padding: 21px 18px; }
+  .important-panel h2 { font-size: 23px; }
 }

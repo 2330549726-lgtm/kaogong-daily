@@ -723,6 +723,13 @@ def main():
     deduped_auto = [a for a in new_auto_articles if a["title"] not in manual_titles]
 
     final_articles = existing_articles + deduped_auto[:12]
+    # 数据文件也保持“当天优先、重要性优先”，避免旧的手工文章排在今日资讯之前。
+    final_articles.sort(key=lambda article: (
+        article.get("date") == today,
+        article.get("analysis", {}).get("exam_relevance") == "高",
+        article.get("source_profile", {}).get("level", 0),
+        len(article.get("analysis", {}).get("idioms", [])),
+    ), reverse=True)
 
     # 更新历史索引
     history_dates = update_history_index()

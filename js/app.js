@@ -30,8 +30,11 @@ const TOPICS = {
 
 const state = {
   articles: [],
+  sourceArticles: [],
   todayArticles: [],
   exploreArticles: [],
+  importantArticles: [],
+  updateDate: '',
   articleIndex: new Map(),
   category: 'all',
   mode: 'today',
@@ -157,9 +160,13 @@ async function loadNewsData() {
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           return response.json();
         });
-    state.articles = data.articles || [];
-    state.todayArticles = state.articles;
-    indexArticles(state.articles);
+    state.sourceArticles = data.articles || [];
+    state.updateDate = data.update_date || state.sourceArticles.map(article => article.date).sort().at(-1) || '';
+    state.todayArticles = state.sourceArticles
+      .filter(article => article.date === state.updateDate)
+      .sort(compareNewsPriority);
+    state.articles = state.todayArticles;
+    indexArticles(state.sourceArticles);
     $('#updateInfo').textContent = data.update_time ? `更新于 ${data.update_time.slice(-8)}` : '今日资讯';
     updateOverview();
     renderLearningDesk();
@@ -204,7 +211,7 @@ function renderNews() {
       : showEmpty(state.mode === 'explore' ? '该专题暂无资料' : '暂无匹配资讯', state.mode === 'explore' ? '后续更新会继续补充这一专题' : '请尝试其他关键词或分类');
   }
   $('#emptyState').hidden = true;
-  $('#newsList').innerHTML = articles.map(renderCard).join('');
+  $('#newsList').innerHTML = articles.map((article, index) => renderCard(article, index)).join('');
 }
 
 function updateMaterialProgress() {
@@ -218,7 +225,7 @@ function updateMaterialProgress() {
   $('#progressMastered').textContent = counts.mastered;
 }
 
-function renderCard(article) {
+function renderCard(article, index = -1) {
   state.articleIndex.set(String(article.id), article);
   const analysis = article.analysis || {};
   const relevance = analysis.exam_relevance || '低';
@@ -230,6 +237,7 @@ function renderCard(article) {
     <article class="news-card" id="article-${escapeHtml(article.id)}" data-id="${escapeHtml(article.id)}">
       <div class="news-card-header">
         <h2 class="news-title">${escapeHtml(article.title)}</h2>
+        ${state.mode === 'today' && index >= 0 && index < 3 ? `<span class="today-rank">今日重点 ${index + 1}</span>` : ''}
         <span class="relevance-badge ${relevanceClass}">${relevance}相关</span>
       </div>
       <div class="news-meta">
@@ -241,6 +249,7 @@ function renderCard(article) {
       </div>
       <div class="news-content">${renderContent(article)}</div>
       <div class="why-learn"><strong>为什么值得学：</strong>${escapeHtml(sourceProfile.why_learn)}</div>
+      ${state.mode === 'important' ? renderFeaturedReason(article) : ''}
       ${collected ? renderMaterialMeta(material) : ''}
       <div class="news-actions">
         <button type="button" class="action-btn collect-btn ${collected ? 'collected' : ''}" data-id="${escapeHtml(article.id)}">${collected ? '★ 已收藏' : '☆ 收藏'}</button>
@@ -358,10 +367,12 @@ async function switchMode(mode) {
   });
   const historyMode = mode === 'history';
   const exploreMode = mode === 'explore';
-  $('#filterPanel').hidden = historyMode || exploreMode;
+  const importantMode = mode === 'important';
+  $('#filterPanel').hidden = historyMode || exploreMode || importantMode;
   $('#historyBar').hidden = !historyMode;
-  $('#learningDesk').hidden = historyMode || exploreMode || state.collectionOnly;
+  $('#learningDesk').hidden = historyMode || exploreMode || importantMode || state.collectionOnly;
   $('#explorePanel').hidden = !exploreMode;
+  $('#importantPanel').hidden = !importantMode;
   if (historyMode) {
     state.category = 'all';
     state.keyword = '';
@@ -373,6 +384,15 @@ async function switchMode(mode) {
     renderTopicGrid();
     const firstTopic = getTopicsWithArticles()[0] || Object.keys(TOPICS)[0];
     selectTopic(state.currentTopic || firstTopic);
+  } else if (importantMode) {
+    $('#newsList').innerHTML = '<div class="empty-state"><strong>正在整理重点新闻</strong><span>汇总往期高相关资讯与成语素材……</span></div>';
+    await loadExploreArticles();
+    state.importantArticles = state.exploreArticles
+      .filter(article => article.date !== state.updateDate && isImportantArticle(article))
+      .sort(compareNewsPriority);
+    state.articles = state.importantArticles;
+    $('#importantCount').textContent = state.importantArticles.length;
+    renderNews();
   } else {
     state.articles = state.todayArticles;
     state.currentTopic = '';
@@ -389,6 +409,33 @@ function setCollectionFilter(active) {
   button.title = active ? '退出收藏素材视图' : '查看已收藏素材';
   $('#materialTools').hidden = !active;
   $('#learningDesk').hidden = active || state.mode !== 'today';
+}
+
+function newsPriorityScore(article) {
+  const relevance = article.analysis?.exam_relevance === '高' ? 100 : 50;
+  const authority = getSourceProfile(article).level * 8;
+  const idioms = getExamIdioms(article.analysis?.idioms).length * 12;
+  const evidence = article.analysis?.knowledge_card?.evidence?.length || 0;
+  return relevance + authority + idioms + evidence * 3;
+}
+
+function compareNewsPriority(a, b) {
+  return newsPriorityScore(b) - newsPriorityScore(a)
+    || String(b.date).localeCompare(String(a.date));
+}
+
+function isImportantArticle(article) {
+  return article.analysis?.exam_relevance === '高'
+    || getExamIdioms(article.analysis?.idioms).length >= 2;
+}
+
+function renderFeaturedReason(article) {
+  const reasons = [];
+  if (article.analysis?.exam_relevance === '高') reasons.push('高相关重点');
+  const idiomCount = getExamIdioms(article.analysis?.idioms).length;
+  if (idiomCount >= 2) reasons.push(`${idiomCount} 个重要成语`);
+  if (getSourceProfile(article).level >= 5) reasons.push('权威政策来源');
+  return `<div class="featured-reason">${reasons.map(reason => `<span>${reason}</span>`).join('')}</div>`;
 }
 
 function getSourceProfile(article) {
@@ -423,8 +470,8 @@ function focusArticle(id) {
 }
 
 function updateListHeading() {
-  $('#listTitle').textContent = state.collectionOnly ? '我的收藏' : state.mode === 'explore' ? `专题 · ${state.currentTopic}` : '权威资讯';
-  $('#listHint').textContent = state.collectionOnly ? `共 ${getFilteredArticles().length} 篇收藏素材，再次点击可退出` : state.mode === 'explore' ? `汇总今日与往期 ${getFilteredArticles().length} 篇资料` : '点击文章可展开考点分析';
+  $('#listTitle').textContent = state.collectionOnly ? '我的收藏' : state.mode === 'explore' ? `专题 · ${state.currentTopic}` : state.mode === 'important' ? '重点新闻' : '今日权威资讯';
+  $('#listHint').textContent = state.collectionOnly ? `共 ${getFilteredArticles().length} 篇收藏素材，再次点击可退出` : state.mode === 'explore' ? `汇总今日与往期 ${getFilteredArticles().length} 篇资料` : state.mode === 'important' ? `按重要性排序，共 ${getFilteredArticles().length} 篇` : `${state.updateDate} · 当天新闻优先排序`;
 }
 
 function articleMatchesTopic(article, topic) {
@@ -467,7 +514,7 @@ async function loadExploreArticles() {
   }
   const dates = typeof HISTORY_DATES !== 'undefined' ? HISTORY_DATES : [];
   const histories = await Promise.all(dates.map(ensureHistoryData));
-  const all = [...state.todayArticles, ...histories.flatMap(data => data?.articles || [])];
+  const all = [...state.sourceArticles, ...histories.flatMap(data => data?.articles || [])];
   const seen = new Set();
   state.exploreArticles = all.filter(article => {
     const key = article.id || article.title;

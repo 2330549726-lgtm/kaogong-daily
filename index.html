@@ -27,6 +27,7 @@
     <div class="nav-inner">
       <div class="mode-tabs" id="modeTabs" role="tablist" aria-label="资讯时间范围">
         <button class="mode-tab active" data-mode="today" role="tab" aria-selected="true">今日要闻</button>
+        <button class="mode-tab" data-mode="important" role="tab" aria-selected="false">重点新闻</button>
         <button class="mode-tab" data-mode="explore" role="tab" aria-selected="false">专题探索</button>
         <button class="mode-tab" data-mode="history" role="tab" aria-selected="false">往期回顾</button>
       </div>
@@ -87,6 +88,15 @@
       </div>
       <div class="topic-grid" id="topicGrid" aria-label="专题列表"></div>
       <div class="topic-current" id="topicCurrent" hidden></div>
+    </section>
+
+    <section class="important-panel" id="importantPanel" hidden aria-labelledby="importantTitle">
+      <div>
+        <p class="eyebrow">长期重点素材</p>
+        <h2 id="importantTitle">值得反复学习的重要新闻</h2>
+        <p>收录往期高相关资讯，以及包含两个或以上重要成语的高价值文章。</p>
+      </div>
+      <div class="important-count"><strong id="importantCount">0</strong><span>篇重点资料</span></div>
     </section>
 
     <section class="history-bar" id="historyBar" hidden aria-label="历史日期">
