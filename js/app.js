@@ -2,7 +2,6 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const STORAGE_KEY = 'gd_exam_collections';
 const MATERIAL_STORAGE_KEY = 'gd_exam_materials';
-const EXAM_ANSWER_STORAGE_KEY = 'gd_exam_exam_answers';
 const CATEGORIES = {
   政策: 'Policy', 经济: 'Economy', 民生: 'Livelihood',
   生态: 'Ecology', 科技: 'Tech', 文化: 'Culture'
@@ -41,7 +40,6 @@ const state = {
   currentTopic: '',
   collections: loadCollections(),
   materials: loadMaterials(),
-  examAnswers: loadExamAnswers(),
   materialFilters: { status: 'all', priority: 'all', tag: '' },
   backupTimer: null
 };
@@ -102,11 +100,6 @@ function bindEvents() {
     if (button) selectTopic(button.dataset.topic);
   });
   $('#randomTopic').addEventListener('click', selectRandomTopic);
-  document.addEventListener('input', event => {
-    if (!event.target.matches('.exam-answer-input')) return;
-    const counter = event.target.closest('.exam-answer-box')?.querySelector('.exam-answer-count');
-    if (counter) counter.textContent = `${event.target.value.length} 字`;
-  });
 
   document.addEventListener('click', event => {
     const action = event.target.closest('[data-action]')?.dataset.action;
@@ -145,12 +138,6 @@ function handleNewsClick(event) {
   if (copyButton) {
     event.stopPropagation();
     copyKnowledgeCard(copyButton.dataset.id);
-    return;
-  }
-  const examAnswerButton = event.target.closest('.save-exam-answer-btn');
-  if (examAnswerButton) {
-    event.stopPropagation();
-    saveExamAnswer(examAnswerButton.dataset.id);
     return;
   }
   if (!event.target.closest('.action-btn')) card.classList.toggle('expanded');
@@ -285,57 +272,9 @@ function renderKnowledgeCard(article) {
       ${section('关键数据与事实', card.evidence, 'evidence')}
     </div>
     <section class="answer-expression"><h3>申论分论点</h3><blockquote>${escapeHtml(card.essay_thesis)}</blockquote></section>
-    ${renderExamMapping(article, card)}
     ${section('面试答题框架', card.interview_outline, 'interview-outline')}
     <div class="knowledge-keywords">${(card.keywords || article.analysis?.keywords || []).map(keyword => `<span>${escapeHtml(keyword)}</span>`).join('')}</div>
   </div>`;
-}
-
-function getExamMapping(article, card) {
-  const matchedTopics = Object.keys(TOPICS).filter(topic => articleMatchesTopic(article, topic));
-  const text = `${article.title}${article.content || article.summary || ''}`;
-  const rural = matchedTopics.some(topic => ['百千万工程', '基层治理', '乡村振兴'].includes(topic));
-  const questionTypes = ['归纳概括'];
-  if (/问题|困难|短板|痛点|挑战/.test(text)) questionTypes.push('提出对策');
-  if (article.analysis?.exam_relevance === '高') questionTypes.push('综合分析');
-  questionTypes.push('申发论述');
-  const theme = matchedTopics[0] || article.category || '社会治理';
-  return {
-    status: '主题相近能力训练（非历年原题）',
-    paperDirection: rural ? '更适合乡镇岗位方向训练' : '更适合县级以上综合管理方向训练',
-    themes: matchedTopics.slice(0, 3).length ? matchedTopics.slice(0, 3) : [article.category],
-    questionTypes: [...new Set(questionTypes)],
-    question: `请根据给定材料，概括${theme}相关工作的主要做法，并分析其对推动高质量发展的意义。`,
-    requirements: ['紧扣材料，概括准确', '要点全面，层次清晰', '使用规范政策语言', '建议控制在250字以内'],
-    answerHints: [...(card.measures || []).slice(0, 2), ...(card.significance || []).slice(0, 2)]
-  };
-}
-
-function renderExamMapping(article, card) {
-  const mapping = getExamMapping(article, card);
-  const saved = state.examAnswers[article.id] || '';
-  return `<section class="exam-mapping">
-    <div class="exam-mapping-heading"><div><small>广东申论真题能力映射</small><h3>这篇材料可以怎么练</h3></div><span>${mapping.status}</span></div>
-    <div class="exam-meta"><strong>${mapping.paperDirection}</strong>${mapping.themes.map(theme => `<span>${escapeHtml(theme)}</span>`).join('')}${mapping.questionTypes.map(type => `<span>${escapeHtml(type)}</span>`).join('')}</div>
-    <div class="exam-question"><small>模拟训练题</small><p>${escapeHtml(mapping.question)}</p><ul>${mapping.requirements.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
-    <details class="exam-hints"><summary>查看参考要点</summary><ol>${mapping.answerHints.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ol></details>
-    <div class="exam-answer-box"><label for="exam-answer-${escapeHtml(article.id)}">我的作答</label><textarea class="exam-answer-input" id="exam-answer-${escapeHtml(article.id)}" rows="5" maxlength="800" placeholder="先独立作答，再展开参考要点对照……">${escapeHtml(saved)}</textarea><div><span class="exam-answer-count">${saved.length} 字</span><button type="button" class="save-exam-answer-btn" data-id="${escapeHtml(article.id)}">保存作答</button></div></div>
-  </section>`;
-}
-
-function loadExamAnswers() {
-  try { return JSON.parse(localStorage.getItem(EXAM_ANSWER_STORAGE_KEY)) || {}; }
-  catch (_) { return {}; }
-}
-
-function saveExamAnswer(id) {
-  const input = $(`#exam-answer-${CSS.escape(String(id))}`);
-  if (!input) return;
-  const value = input.value.trim();
-  if (value) state.examAnswers[id] = value;
-  else delete state.examAnswers[id];
-  localStorage.setItem(EXAM_ANSWER_STORAGE_KEY, JSON.stringify(state.examAnswers));
-  showToast(value ? '模拟作答已保存' : '已清空这次作答');
 }
 
 function deriveKnowledgeCard(article) {
@@ -680,7 +619,7 @@ function toggleCollect(id, button) {
 }
 
 function exportCollections() {
-  const backup = { version: 4, collections: Object.keys(state.collections), materials: state.materials, examAnswers: state.examAnswers };
+  const backup = { version: 4, collections: Object.keys(state.collections), materials: state.materials };
   const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
   const link = Object.assign(document.createElement('a'), { href: url, download: 'collections.json' });
   link.click();
@@ -702,10 +641,8 @@ function importCollections() {
           : Object.keys(data).filter(id => data[id] === true);
         ids.forEach(id => { state.collections[id] = true; });
         if (data.materials && typeof data.materials === 'object') state.materials = { ...state.materials, ...data.materials };
-        if (data.examAnswers && typeof data.examAnswers === 'object') state.examAnswers = { ...state.examAnswers, ...data.examAnswers };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state.collections));
         localStorage.setItem(MATERIAL_STORAGE_KEY, JSON.stringify(state.materials));
-        localStorage.setItem(EXAM_ANSWER_STORAGE_KEY, JSON.stringify(state.examAnswers));
         $('#statCollected').textContent = Object.keys(state.collections).length;
         showToast(`成功导入 ${ids.length} 条收藏`);
         state.mode === 'today' ? renderNews() : null;
