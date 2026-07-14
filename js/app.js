@@ -13,6 +13,56 @@ const EXAM_IDIOMS = new Set([
   '日新月异', '方兴未艾', '前所未有', '统筹兼顾', '源远流长',
   '博大精深', '薪火相传', '突飞猛进', '事半功倍', '久久为功'
 ]);
+const VERBAL_IDIOM_DISTRACTORS = {
+  举足轻重: ['至关重要', '不可或缺', '举重若轻'], 任重道远: ['负重前行', '道阻且长', '一蹴而就'],
+  立竿见影: ['卓有成效', '行之有效', '事半功倍'], 雪中送炭: ['锦上添花', '济困扶危', '投桃报李'],
+  锦上添花: ['雪中送炭', '精益求精', '画龙点睛'], 因地制宜: ['因势利导', '因材施教', '对症下药'],
+  循序渐进: ['按部就班', '潜移默化', '稳扎稳打'], 持之以恒: ['锲而不舍', '久久为功', '孜孜不倦'],
+  相得益彰: ['相辅相成', '珠联璧合', '并行不悖'], 保驾护航: ['添砖加瓦', '推波助澜', '越俎代庖'],
+  日新月异: ['突飞猛进', '瞬息万变', '一日千里'], 方兴未艾: ['如火如荼', '蔚然成风', '雨后春笋'],
+  前所未有: ['史无前例', '空前绝后', '绝无仅有'], 统筹兼顾: ['齐头并进', '相辅相成', '面面俱到'],
+  源远流长: ['博大精深', '薪火相传', '历久弥新'], 博大精深: ['源远流长', '兼容并蓄', '蔚为大观'],
+  薪火相传: ['一脉相承', '代代相传', '继往开来'], 突飞猛进: ['日新月异', '一日千里', '翻天覆地'],
+  事半功倍: ['一举两得', '卓有成效', '行之有效'], 久久为功: ['持之以恒', '锲而不舍', '循序渐进']
+};
+const VERBAL_WORD_RULES = [
+  ['完善', ['健全', '优化', '完备'], '“完善”强调在已有基础上补充改进，使制度、机制或体系更加完备。'],
+  ['提升', ['提高', '扩大', '提拔'], '“提升”强调层次、水平或能力向上，常与水平、效能、质量搭配。'],
+  ['促进', ['推动', '促使', '催促'], '“促进”强调推动事物向好发展，常与发展、合作、交流、就业搭配。'],
+  ['推进', ['推行', '推动', '促进'], '“推进”强调工作、改革或建设按进程向前开展。'],
+  ['加强', ['强化', '加深', '增添'], '“加强”强调在原有基础上增进力度，常与监管、保障、合作、治理搭配。'],
+  ['优化', ['改善', '完善', '改良'], '“优化”强调调整结构或配置，使整体状态达到更优。'],
+  ['保障', ['保证', '保护', '维护'], '“保障”强调提供必要条件，确保民生、权益、供给或安全得到实现。'],
+  ['构建', ['建立', '建设', '创设'], '“构建”强调有系统地搭建结构、体系、机制或格局。'],
+  ['推动', ['推进', '驱动', '促使'], '“推动”强调施加力量，使事业、改革或发展向前。'],
+  ['激活', ['激发', '释放', '唤醒'], '“激活”强调使原本潜在或沉寂的活力、动能发挥作用。'],
+  ['支持', ['支撑', '扶持', '维持'], '“支持”表示给予帮助、条件或力量，适用对象范围较广。'],
+  ['发展', ['发扬', '扩展', '演变'], '“发展”强调事物向前变化，常与经济、产业、事业等对象搭配。']
+];
+const VERBAL_TERM_NOTES = {
+  至关重要: '强调重要程度极高，但不突出其行动足以影响全局。', 不可或缺: '强调不能缺少，侧重必要性。', 举重若轻: '指处理重大问题轻松自如，侧重能力。',
+  负重前行: '强调承受压力继续前进，不突出路程长。', 道阻且长: '强调道路艰险漫长，不突出责任重大。', 一蹴而就: '指一下子就成功，多用于否定句。',
+  卓有成效: '强调已经取得显著成绩。', 行之有效: '强调方法实行起来确有成效。', 事半功倍: '强调投入较少而收效较大。',
+  锦上添花: '比喻在已有良好基础上进一步增益。', 济困扶危: '泛指救济贫困、扶助危难。', 投桃报李: '强调友好往来或相互赠答。',
+  因势利导: '顺着事物发展趋势加以引导。', 因材施教: '根据学习者特点采用不同教育方法。', 对症下药: '针对具体问题采取相应办法。',
+  按部就班: '按条理和步骤办事，也可含缺乏创新意味。', 潜移默化: '强调不知不觉受到影响。', 稳扎稳打: '强调做事稳妥、有把握。',
+  锲而不舍: '强调坚持到底、不轻言放弃。', 孜孜不倦: '强调勤奋努力、不知疲倦。', 相辅相成: '强调双方相互辅助、缺一不可。',
+  珠联璧合: '比喻优秀的人或事物美好结合。', 并行不悖: '强调同时进行而互不冲突。', 添砖加瓦: '比喻为一项事业贡献力量。',
+  推波助澜: '比喻助长事物声势，多用于贬义。', 越俎代庖: '比喻超越权限代替别人办事。', 瞬息万变: '强调在极短时间内变化很多。',
+  一日千里: '强调进展速度极快。', 如火如荼: '强调气势旺盛、场面热烈。', 蔚然成风: '强调一种良好事物逐渐形成风气。',
+  雨后春笋: '比喻新事物大量迅速涌现。', 史无前例: '历史上从来没有过，与前所未有高度近义。', 空前绝后: '既前所未有又后无来者，语义过重。',
+  绝无仅有: '极其少有，强调稀缺而非首次出现。', 齐头并进: '强调多个方面同时向前。', 面面俱到: '强调各方面都照顾到，常指处理周全。',
+  历久弥新: '强调经历长久时间仍显新意和活力。', 兼容并蓄: '强调包容吸收不同内容。', 蔚为大观: '形容事物丰富多彩，形成盛大景象。',
+  一脉相承: '强调同一体系或派别前后承接。', 代代相传: '泛指一代一代传下去。', 继往开来: '强调继承前人事业并开辟未来。',
+  一举两得: '强调一个行动同时得到两种好处。', 翻天覆地: '强调变化幅度巨大。', 循序渐进: '强调按照步骤逐步推进。',
+  健全: '强调使体系完整并能正常发挥作用。', 完备: '侧重状态完整齐备，多作形容词。', 提高: '常指数量、质量、水平由低到高。',
+  扩大: '强调范围、规模增大。', 提拔: '用于选拔人员到更高职位。', 促使: '强调外力使对象产生某种行为或变化。', 催促: '强调促使对方加快行动。',
+  推行: '强调推广实行制度、政策或办法。', 强化: '强调进一步增强某种作用或特征。', 加深: '常与认识、印象、感情等搭配。', 增添: '强调增加原来没有或不足的事物。',
+  改善: '强调改变原有情况使之较好。', 改良: '多指在原有基础上改进具体品种或方法。', 保证: '强调担保达到或不出问题。', 保护: '强调使对象免受损害。', 维护: '强调保持权益、秩序或稳定。',
+  建立: '强调从无到有地形成。', 建设: '强调创建并持续发展，多用于事业或设施。', 创设: '强调创造条件、情境或环境。', 驱动: '强调成为内在动力。',
+  激发: '强调刺激而产生活力、动力或热情。', 释放: '强调把原有潜力、红利或活力放出来。', 唤醒: '多指从沉睡状态恢复，也可作比喻。', 支撑: '强调承受并维持整体。',
+  扶持: '强调帮助处于成长或弱势阶段的对象。', 维持: '强调保持现状不变。', 发扬: '常与精神、作风、传统搭配。', 扩展: '强调范围或空间向外伸展。', 演变: '强调经过较长过程发生变化。'
+};
 const TOPICS = {
   '粤港澳大湾区': { description: '区域协同、规则衔接与湾区建设', keywords: ['粤港澳', '大湾区', '横琴', '前海', '南沙', '河套'] },
   '百千万工程': { description: '县镇村高质量发展与城乡融合', keywords: ['百千万', '强县', '兴村', '县域', '镇村'] },
@@ -125,6 +175,19 @@ function bindEvents() {
 function handleNewsClick(event) {
   const card = event.target.closest('.news-card');
   if (!card) return;
+  const quizOption = event.target.closest('.verbal-option');
+  if (quizOption) {
+    event.stopPropagation();
+    const quiz = quizOption.closest('.verbal-quiz');
+    $$('.verbal-option', quiz).forEach(option => option.classList.toggle('selected', option === quizOption));
+    return;
+  }
+  const answerButton = event.target.closest('.verbal-answer-btn');
+  if (answerButton) {
+    event.stopPropagation();
+    revealVerbalAnswer(answerButton.closest('.verbal-quiz'), answerButton);
+    return;
+  }
   const collectButton = event.target.closest('.collect-btn');
   if (collectButton) {
     event.stopPropagation();
@@ -248,6 +311,7 @@ function renderCard(article, index = -1) {
         <span class="cat-badge">${escapeHtml(article.category)}</span>
       </div>
       <div class="news-content">${renderContent(article)}</div>
+      ${renderVerbalQuestion(article)}
       <div class="why-learn"><strong>为什么值得学：</strong>${escapeHtml(sourceProfile.why_learn)}</div>
       ${state.mode === 'important' ? renderFeaturedReason(article) : ''}
       ${collected ? renderMaterialMeta(material) : ''}
@@ -331,6 +395,122 @@ function renderContent(article) {
     .split(/\n\s*\n/).map(text => text.trim()).filter(Boolean)
     .map(text => `<p>${text.replace(/\n/g, '<br>')}</p>`).join('');
   return highlightIdioms(paragraphs, getExamIdioms(article.analysis?.idioms));
+}
+
+function renderVerbalQuestion(article) {
+  const question = article.analysis?.verbal_question || deriveVerbalQuestion(article);
+  if (!question?.stem || question.options?.length !== 4 || !question.answer) return '';
+  const letters = ['A', 'B', 'C', 'D'];
+  const options = question.options.map((option, index) => `
+    <button type="button" class="verbal-option" data-value="${escapeHtml(option)}">
+      <span>${letters[index]}</span>${escapeHtml(option)}
+    </button>`).join('');
+  const optionAnalysis = (question.option_analysis || []).map(item => `
+    <li class="${item.correct ? 'is-answer' : ''}"><strong>${escapeHtml(item.option)}</strong><span>${escapeHtml(item.note)}</span></li>`).join('');
+  return `<section class="verbal-quiz" data-answer="${escapeHtml(question.answer)}">
+    <div class="verbal-heading"><div><small>新闻原句自动出题</small><h3>${escapeHtml(question.type || '逻辑填空')}</h3></div><span>单选题</span></div>
+    <p class="verbal-stem">${escapeHtml(question.stem)}</p>
+    <div class="verbal-options">${options}</div>
+    <div class="verbal-footer">
+      <button type="button" class="verbal-answer-btn" aria-expanded="false">查看答案与解析</button>
+      <span>先选一项，再核对答案</span>
+    </div>
+    <div class="verbal-explanation" hidden>
+      <div class="verbal-answer-line"><strong>答案：${escapeHtml(question.answer)}</strong><span>${escapeHtml(question.context_relation || '搭配对应')}</span></div>
+      <section><h4>① 找语境</h4><p>${escapeHtml(question.context_clue || '定位空格前后的搭配对象和关联词，推导所需含义。')}</p></section>
+      <section><h4>② 辨词义</h4><p>${escapeHtml(question.explanation || `“${question.answer}”最符合原句语义和搭配。`)}</p>${optionAnalysis ? `<ul class="verbal-option-analysis">${optionAnalysis}</ul>` : ''}</section>
+      <section><h4>③ 代入验证</h4><p>${escapeHtml(question.method || '将答案代回原句，核对语义、搭配、程度和感情色彩。')}</p></section>
+      <div class="verbal-error-point"><strong>易错点：</strong>${escapeHtml(question.error_point || '不要只凭语感，要同时核对语境对应和固定搭配。')}</div>
+    </div>
+  </section>`;
+}
+
+function deriveVerbalQuestion(article) {
+  const text = String(article.content || article.summary || '').replace(/\s+/g, ' ').trim();
+  const sentences = text.match(/[^。！？；]+[。！？；]?/g)?.map(item => item.trim()).filter(item => item.length >= 12) || [];
+  let answer = '';
+  let sentence = '';
+  let distractors = [];
+  let explanation = '';
+  let type = '逻辑填空 · 实词辨析';
+
+  for (const item of getExamIdioms(article.analysis?.idioms)) {
+    const matched = sentences.find(candidate => candidate.includes(item.word));
+    if (!matched || !VERBAL_IDIOM_DISTRACTORS[item.word]) continue;
+    answer = item.word;
+    sentence = matched;
+    distractors = VERBAL_IDIOM_DISTRACTORS[item.word];
+    explanation = item.explanation || '该成语最符合原句的语义、程度和适用对象。';
+    type = '逻辑填空 · 成语辨析';
+    break;
+  }
+  if (!answer) {
+    for (const [word, alternatives, note] of VERBAL_WORD_RULES) {
+      const matched = sentences.find(candidate => candidate.includes(word));
+      if (!matched) continue;
+      answer = word;
+      sentence = matched;
+      distractors = alternatives;
+      explanation = note;
+      break;
+    }
+  }
+  if (!answer) return null;
+
+  const stem = sentence.replace(answer, '______');
+  const options = [answer, ...distractors.slice(0, 3)];
+  const shift = stableQuizIndex(`${article.title}|${answer}`) % 4;
+  const shuffledOptions = [...options.slice(shift), ...options.slice(0, shift)];
+  const context = detectVerbalContext(sentence, answer);
+  return {
+    type, stem, options: shuffledOptions, answer, explanation,
+    context_relation: context.relation,
+    context_clue: context.clue,
+    method: '先找空格前后的关联词和搭配对象，推导所需含义；再比较选项的适用对象、语义侧重、程度和感情色彩，最后代入验证。',
+    option_analysis: shuffledOptions.map(option => ({
+      option,
+      correct: option === answer,
+      note: option === answer ? explanation : (VERBAL_TERM_NOTES[option] || '与正确项意思相近，但适用对象、语义侧重或固定搭配不同。')
+    })),
+    error_point: '不要凭语感或只看近义关系；本题要同时核对语境对应和固定搭配。'
+  };
+}
+
+function detectVerbalContext(sentence, answer) {
+  const rules = [
+    ['转折对应', ['但是', '但', '然而', '却', '虽然', '尽管']],
+    ['递进对应', ['不仅', '而且', '甚至', '更', '还']],
+    ['因果对应', ['因此', '所以', '从而', '因而', '由于']],
+    ['条件对应', ['只有', '只要', '必须', '需要', '才能']],
+    ['并列对应', ['同时', '以及', '既', '又', '与', '和']]
+  ];
+  for (const [relation, markers] of rules) {
+    const found = markers.filter(marker => sentence.includes(marker));
+    if (found.length) return { relation, clue: `定位词“${found.slice(0, 2).join('、')}”提示${relation}；结合空格前后对象判断词义侧重。` };
+  }
+  const index = sentence.indexOf(answer);
+  const objectHint = sentence.slice(index + answer.length, index + answer.length + 10).replace(/[，。；：、\s]/g, '').slice(0, 6) || '后文对象';
+  return { relation: '搭配对应', clue: `重点观察“______＋${objectHint}”的动宾或修饰搭配，再比较选项适用对象。` };
+}
+
+function stableQuizIndex(text) {
+  let value = 0;
+  for (const char of text) value = (value * 31 + char.charCodeAt(0)) >>> 0;
+  return value;
+}
+
+function revealVerbalAnswer(quiz, button) {
+  if (!quiz) return;
+  const answer = quiz.dataset.answer;
+  const selected = $('.verbal-option.selected', quiz);
+  $$('.verbal-option', quiz).forEach(option => {
+    option.classList.toggle('correct', option.dataset.value === answer);
+    option.classList.toggle('incorrect', option === selected && option.dataset.value !== answer);
+  });
+  $('.verbal-explanation', quiz).hidden = false;
+  button.textContent = '答案已展开';
+  button.setAttribute('aria-expanded', 'true');
+  quiz.classList.add('answered');
 }
 
 function renderIdiomsBlock(idioms = []) {

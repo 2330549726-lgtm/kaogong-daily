@@ -19,6 +19,7 @@ import re
 import hashlib
 import datetime
 import os
+import subprocess
 from typing import Optional
 
 try:
@@ -269,6 +270,7 @@ def analyze_article(title: str, summary: str) -> dict:
     key_points = generate_key_points(title, summary, keywords)
     idioms = extract_idioms(title, summary, key_points)
     knowledge_card = build_knowledge_card(title, summary, category, keywords, key_points)
+    verbal_question = build_verbal_question(title, summary, idioms)
 
     # 适用题型判断
     topics = ["申论大作文"]
@@ -286,6 +288,7 @@ def analyze_article(title: str, summary: str) -> dict:
         "key_points": key_points,
         "suggested_usage": f"适用于{category}类话题的素材积累，建议熟记关键词和核心要点，在答{topics[0]}时可灵活运用。",
         "idioms": idioms,
+        "verbal_question": verbal_question,
         "knowledge_card": knowledge_card,
     }
 
@@ -314,6 +317,71 @@ COMMON_IDIOMS = {
     "突飞猛进": "形容进步和发展特别迅速。辨析：侧重速度与幅度；‘日新月异’侧重新事物、新变化不断出现。",
     "事半功倍": "用较少的精力取得较大的成效。辨析：强调投入少、收效大；反义为‘事倍功半’。",
     "久久为功": "持续用力、长期积累才能取得成效。辨析：侧重长期积累后的成效；‘持之以恒’侧重坚持的态度。",
+}
+
+# 逻辑填空干扰项只从固定辨析组中产生，避免把无关词语随机塞进选项。
+IDIOM_DISTRACTORS = {
+    "举足轻重": ["至关重要", "不可或缺", "举重若轻"],
+    "任重道远": ["负重前行", "道阻且长", "一蹴而就"],
+    "立竿见影": ["卓有成效", "行之有效", "事半功倍"],
+    "雪中送炭": ["锦上添花", "济困扶危", "投桃报李"],
+    "锦上添花": ["雪中送炭", "精益求精", "画龙点睛"],
+    "因地制宜": ["因势利导", "因材施教", "对症下药"],
+    "循序渐进": ["按部就班", "潜移默化", "稳扎稳打"],
+    "持之以恒": ["锲而不舍", "久久为功", "孜孜不倦"],
+    "相得益彰": ["相辅相成", "珠联璧合", "并行不悖"],
+    "保驾护航": ["添砖加瓦", "推波助澜", "越俎代庖"],
+    "日新月异": ["突飞猛进", "瞬息万变", "一日千里"],
+    "方兴未艾": ["如火如荼", "蔚然成风", "雨后春笋"],
+    "前所未有": ["史无前例", "空前绝后", "绝无仅有"],
+    "统筹兼顾": ["齐头并进", "相辅相成", "面面俱到"],
+    "源远流长": ["博大精深", "薪火相传", "历久弥新"],
+    "博大精深": ["源远流长", "兼容并蓄", "蔚为大观"],
+    "薪火相传": ["一脉相承", "代代相传", "继往开来"],
+    "突飞猛进": ["日新月异", "一日千里", "翻天覆地"],
+    "事半功倍": ["一举两得", "卓有成效", "行之有效"],
+    "久久为功": ["持之以恒", "锲而不舍", "循序渐进"],
+}
+
+# 没有规范成语的新闻，改考政策新闻中的高频实词搭配，确保每篇新闻都有一题。
+WORD_QUESTION_RULES = [
+    ("完善", ["健全", "优化", "完备"], "‘完善’强调在已有基础上补充改进，使制度、机制或体系更加完备。"),
+    ("提升", ["提高", "扩大", "提拔"], "‘提升’强调层次、水平或能力向上，常与水平、效能、质量搭配。"),
+    ("促进", ["推动", "促使", "催促"], "‘促进’强调推动事物向好发展，常与发展、合作、交流、就业搭配。"),
+    ("推进", ["推行", "推动", "促进"], "‘推进’强调工作、改革或建设按进程向前开展。"),
+    ("加强", ["强化", "加深", "增添"], "‘加强’强调在原有基础上增进力度，常与监管、保障、合作、治理搭配。"),
+    ("优化", ["改善", "完善", "改良"], "‘优化’强调调整结构或配置，使整体状态达到更优。"),
+    ("保障", ["保证", "保护", "维护"], "‘保障’强调提供必要条件，确保民生、权益、供给或安全得到实现。"),
+    ("构建", ["建立", "建设", "创设"], "‘构建’强调有系统地搭建结构、体系、机制或格局。"),
+    ("推动", ["推进", "驱动", "促使"], "‘推动’强调施加力量，使事业、改革或发展向前。"),
+    ("激活", ["激发", "释放", "唤醒"], "‘激活’强调使原本潜在或沉寂的活力、动能发挥作用。"),
+    ("支持", ["支撑", "扶持", "维持"], "‘支持’表示给予帮助、条件或力量，适用对象范围较广。"),
+    ("发展", ["发扬", "扩展", "演变"], "‘发展’强调事物向前变化，常与经济、产业、事业等对象搭配。"),
+]
+
+TERM_NOTES = {
+    "至关重要": "强调重要程度极高，但不突出其行动足以影响全局。", "不可或缺": "强调不能缺少，侧重必要性。", "举重若轻": "指处理重大问题轻松自如，侧重能力。",
+    "负重前行": "强调承受压力继续前进，不突出路程长。", "道阻且长": "强调道路艰险漫长，不突出责任重大。", "一蹴而就": "指一下子就成功，多用于否定句。",
+    "卓有成效": "强调已经取得显著成绩。", "行之有效": "强调方法实行起来确有成效。", "事半功倍": "强调投入较少而收效较大。",
+    "锦上添花": "比喻在已有良好基础上进一步增益。", "济困扶危": "泛指救济贫困、扶助危难。", "投桃报李": "强调友好往来或相互赠答。",
+    "因势利导": "顺着事物发展趋势加以引导。", "因材施教": "根据学习者特点采用不同教育方法。", "对症下药": "针对具体问题采取相应办法。",
+    "按部就班": "按条理和步骤办事，也可含缺乏创新意味。", "潜移默化": "强调不知不觉受到影响。", "稳扎稳打": "强调做事稳妥、有把握。",
+    "锲而不舍": "强调坚持到底、不轻言放弃。", "孜孜不倦": "强调勤奋努力、不知疲倦。", "相辅相成": "强调双方相互辅助、缺一不可。",
+    "珠联璧合": "比喻优秀的人或事物美好结合。", "并行不悖": "强调同时进行而互不冲突。", "添砖加瓦": "比喻为一项事业贡献力量。",
+    "推波助澜": "比喻助长事物声势，多用于贬义。", "越俎代庖": "比喻超越权限代替别人办事。", "瞬息万变": "强调在极短时间内变化很多。",
+    "一日千里": "强调进展速度极快。", "如火如荼": "强调气势旺盛、场面热烈。", "蔚然成风": "强调一种良好事物逐渐形成风气。",
+    "雨后春笋": "比喻新事物大量迅速涌现。", "史无前例": "历史上从来没有过，与前所未有高度近义。", "空前绝后": "既前所未有又后无来者，语义过重。",
+    "绝无仅有": "极其少有，强调稀缺而非首次出现。", "齐头并进": "强调多个方面同时向前。", "面面俱到": "强调各方面都照顾到，常指处理周全。",
+    "历久弥新": "强调经历长久时间仍显新意和活力。", "兼容并蓄": "强调包容吸收不同内容。", "蔚为大观": "形容事物丰富多彩，形成盛大景象。",
+    "一脉相承": "强调同一体系或派别前后承接。", "代代相传": "泛指一代一代传下去。", "继往开来": "强调继承前人事业并开辟未来。",
+    "一举两得": "强调一个行动同时得到两种好处。", "翻天覆地": "强调变化幅度巨大。", "循序渐进": "强调按照步骤逐步推进。",
+    "健全": "强调使体系完整并能正常发挥作用。", "完备": "侧重状态完整齐备，多作形容词。", "提高": "常指数量、质量、水平由低到高。",
+    "扩大": "强调范围、规模增大。", "提拔": "用于选拔人员到更高职位。", "促使": "强调外力使对象产生某种行为或变化。", "催促": "强调促使对方加快行动。",
+    "推行": "强调推广实行制度、政策或办法。", "强化": "强调进一步增强某种作用或特征。", "加深": "常与认识、印象、感情等搭配。", "增添": "强调增加原来没有或不足的事物。",
+    "改善": "强调改变原有情况使之较好。", "改良": "多指在原有基础上改进具体品种或方法。", "保证": "强调担保达到或不出问题。", "保护": "强调使对象免受损害。", "维护": "强调保持权益、秩序或稳定。",
+    "建立": "强调从无到有地形成。", "建设": "强调创建并持续发展，多用于事业或设施。", "创设": "强调创造条件、情境或环境。", "驱动": "强调成为内在动力。",
+    "激发": "强调刺激而产生活力、动力或热情。", "释放": "强调把原有潜力、红利或活力放出来。", "唤醒": "多指从沉睡状态恢复，也可作比喻。", "支撑": "强调承受并维持整体。",
+    "扶持": "强调帮助处于成长或弱势阶段的对象。", "维持": "强调保持现状不变。", "发扬": "常与精神、作风、传统搭配。", "扩展": "强调范围或空间向外伸展。", "演变": "强调经过较长过程发生变化。",
 }
 
 
@@ -349,6 +417,89 @@ def extract_idioms(title: str, summary: str, key_points: list) -> list:
     return found[:6]  # 最多6个成语
 
 
+def build_verbal_question(title: str, summary: str, idioms: list) -> Optional[dict]:
+    """从新闻原句生成一道四选一逻辑填空题，答案位置按标题稳定打散。"""
+    text = re.sub(r"\s+", " ", summary).strip()
+    sentences = [s.strip() for s in re.split(r"(?<=[。！？；])", text) if len(s.strip()) >= 12]
+
+    answer = ""
+    explanation = ""
+    distractors = []
+    focus = "逻辑填空 · 实词辨析"
+    sentence = ""
+
+    for item in idioms:
+        word = item.get("word", "")
+        matched = next((s for s in sentences if word in s), "")
+        if matched and word in IDIOM_DISTRACTORS:
+            answer = word
+            sentence = matched
+            distractors = IDIOM_DISTRACTORS[word]
+            explanation = COMMON_IDIOMS[word]
+            focus = "逻辑填空 · 成语辨析"
+            break
+
+    if not answer:
+        for word, alternatives, note in WORD_QUESTION_RULES:
+            matched = next((s for s in sentences if word in s), "")
+            if matched:
+                answer = word
+                sentence = matched
+                distractors = alternatives
+                explanation = note
+                break
+
+    if not answer or not sentence:
+        return None
+
+    stem = sentence.replace(answer, "______", 1)
+
+    options = [answer] + distractors[:3]
+    shift = int(hashlib.md5(f"{title}|{answer}".encode()).hexdigest()[:2], 16) % 4
+    options = options[shift:] + options[:shift]
+    relation, clue = detect_verbal_context(sentence, answer)
+    option_analysis = []
+    for option in options:
+        if option == answer:
+            option_analysis.append({"option": option, "correct": True, "note": explanation})
+        else:
+            note = TERM_NOTES.get(option, "与正确项意思相近，但适用对象、语义侧重或固定搭配不同。")
+            option_analysis.append({"option": option, "correct": False, "note": note})
+    return {
+        "type": focus,
+        "stem": stem,
+        "options": options,
+        "answer": answer,
+        "answer_index": options.index(answer),
+        "explanation": explanation,
+        "context_relation": relation,
+        "context_clue": clue,
+        "method": "先找空格前后的关联词和搭配对象，推导所需含义；再比较四个选项的适用对象、语义侧重、程度和感情色彩，最后代入验证。",
+        "option_analysis": option_analysis,
+        "error_point": "不要凭语感或只看近义关系；本题要同时核对语境对应和固定搭配。",
+        "source_based": True,
+    }
+
+
+def detect_verbal_context(sentence: str, answer: str) -> tuple[str, str]:
+    """按言语理解语境分析法标注最主要的对应关系和定位线索。"""
+    rules = [
+        ("转折对应", ["但是", "但", "然而", "却", "虽然", "尽管"]),
+        ("递进对应", ["不仅", "而且", "甚至", "更", "还"]),
+        ("因果对应", ["因此", "所以", "从而", "因而", "由于"]),
+        ("条件对应", ["只有", "只要", "必须", "需要", "才能"]),
+        ("并列对应", ["同时", "以及", "既", "又", "与", "和"]),
+    ]
+    for relation, markers in rules:
+        found = [marker for marker in markers if marker in sentence]
+        if found:
+            return relation, f"定位词“{'、'.join(found[:2])}”提示{relation}；结合空格前后对象判断词义侧重。"
+    idx = sentence.find(answer)
+    following = sentence[idx + len(answer):idx + len(answer) + 10].strip("，。；：、 ")
+    object_hint = following[:6] or "后文对象"
+    return "搭配对应", f"重点观察“______＋{object_hint}”的动宾或修饰搭配，再比较选项适用对象。"
+
+
 def fetch_source(source: dict) -> list:
     """从单个新闻源抓取新闻，支持 JSON API 和 HTML 两种模式"""
     source_type = source.get("type", "html")
@@ -375,6 +526,9 @@ def fetch_json_api(source: dict) -> list:
 
             if not title or len(title) < 8:
                 continue
+            # 纯图片“图解”页没有可靠文字正文，不能据此生成材料题。
+            if title.startswith("图解：") or title.startswith("图解:"):
+                continue
 
             url = item.get("url", "")
             if not url:
@@ -399,6 +553,8 @@ def fetch_json_api(source: dict) -> list:
 
 def clean_content(text: str) -> str:
     """清理文章正文，去除导航面包屑和元数据"""
+    # 正文容器有时把“相关文章”列表一并包入，必须在推荐区之前截断。
+    text = re.split(r'\s*相关文章\s*', text, maxsplit=1)[0]
     # 去除 "首页 > 要闻动态 > 要闻" 等面包屑导航
     text = re.sub(r'首页\s*>\s*(要闻动态\s*>\s*)?(要闻|政务公开|互动交流|走进广东)\s*', '', text)
     # 去除 "时间 : 2026-05-28 16:04:30" 等元数据行
@@ -408,6 +564,7 @@ def clean_content(text: str) -> str:
     # 去除 "【打印】 【字体: ...】" "我的收藏 收藏" 等
     text = re.sub(r'【[^】]*】', '', text)
     text = re.sub(r'我的收藏\s*收藏', '', text)
+    text = re.sub(r'分享(?:到)?\s*[：:]?', '', text)
     # 清理多余空白
     text = re.sub(r'\s+', ' ', text).strip()
     return text
@@ -415,24 +572,46 @@ def clean_content(text: str) -> str:
 
 def fetch_article_content(url: str) -> str:
     """尝试从文章详情页提取正文内容"""
+    html = b""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=10)
-        resp.encoding = resp.apparent_encoding or "utf-8"
-        soup = BeautifulSoup(resp.text, "lxml")
+        resp.raise_for_status()
+        html = resp.content
+    except Exception:
+        # 广东政府站点偶尔会提前关闭 Python TLS 连接，curl 的 HTTP/1.1 兼容性更好。
+        try:
+            result = subprocess.run(
+                ["curl.exe", "--http1.1", "--tlsv1.2", "--retry", "2",
+                 "--retry-all-errors", "-L", "-sS", "-A", HEADERS["User-Agent"], url],
+                capture_output=True,
+                check=False,
+                timeout=35,
+            )
+            if result.returncode == 0:
+                html = result.stdout
+        except Exception:
+            html = b""
+
+    if not html:
+        return ""
+
+    try:
+        soup = BeautifulSoup(html, "lxml")
         # 尝试多个常见正文容器
-        for selector in [".con", ".zw", ".article-content", ".content", "article", ".news-content"]:
+        # 具体正文选择器优先，避免先命中包裹导航和分享按钮的外层容器。
+        for selector in [".zw", "#rm_txt_zw", ".rm_txt_con", ".article-content", ".view-content", ".TRS_Editor", "article", ".news-content", ".con", ".content"]:
             elem = soup.select_one(selector)
             if elem:
                 text = elem.get_text(separator=" ", strip=True)
                 text = clean_content(text)
                 if len(text) > 50:
-                    return text[:500]
+                    return text
         # 尝试从 meta description 获取
         meta = soup.select_one('meta[name="description"]')
         if meta:
             desc = meta.get("content", "")
             if desc:
-                return clean_content(desc)[:500]
+                return clean_content(desc)
     except Exception:
         pass
     return ""
@@ -458,6 +637,8 @@ def fetch_html_source(source: dict) -> list:
             title = link.get("title") or link.get_text(strip=True)
             href = link.get("href", "")
             if not title or len(title) < 8:
+                continue
+            if title.startswith("图解：") or title.startswith("图解:"):
                 continue
             if title in seen_titles:
                 continue

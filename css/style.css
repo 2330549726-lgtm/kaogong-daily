@@ -133,6 +133,40 @@ button { cursor: pointer; }
 .news-content { margin-top: 14px; color: #55514b; }
 .news-content p { margin: 0 0 8px; text-indent: 2em; }
 .news-content p:last-child { margin-bottom: 0; }
+.verbal-quiz { margin-top: 18px; padding: 17px 18px; background: #fbf7ed; border: 1px solid #dfd3bd; border-left: 4px solid var(--gold); }
+.verbal-heading { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+.verbal-heading small { color: #9b6b25; font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+.verbal-heading h3 { margin: 1px 0 0; color: var(--red-dark); font: 700 17px var(--serif); }
+.verbal-heading > span { padding: 2px 7px; color: #806b4a; border: 1px solid #cdbb9d; font-size: 11px; white-space: nowrap; }
+.verbal-stem { margin: 12px 0; color: #393631; font: 600 16px/1.85 var(--serif); }
+.verbal-stem::first-letter { margin-left: 2em; }
+.verbal-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.verbal-option { padding: 9px 12px; display: flex; align-items: center; gap: 9px; text-align: left; color: #514d47; background: var(--white); border: 1px solid #d8cfc1; transition: border-color .15s, background .15s; }
+.verbal-option span { width: 22px; height: 22px; display: inline-grid; flex: 0 0 22px; place-items: center; color: #7b7061; background: #eee7da; font: 700 12px var(--serif); }
+.verbal-option:hover, .verbal-option.selected { color: var(--red-dark); border-color: var(--red); background: #fff8f6; }
+.verbal-option.correct { color: #2f6542; border-color: #4f8762; background: #edf6ef; }
+.verbal-option.correct span { color: #fff; background: #4f8762; }
+.verbal-option.incorrect { color: #8d3535; border-color: #b86b6b; background: #fbefef; }
+.verbal-option.incorrect span { color: #fff; background: #a94c4c; }
+.verbal-footer { margin-top: 11px; display: flex; align-items: center; gap: 12px; }
+.verbal-answer-btn { padding: 5px 10px; color: var(--red); background: transparent; border: 1px solid var(--red); font-size: 12px; font-weight: 700; }
+.verbal-answer-btn:hover { color: #fff; background: var(--red); }
+.verbal-footer span { color: #9a9287; font-size: 11px; }
+.verbal-explanation { margin-top: 12px; padding: 12px 14px; color: #61594f; background: #f1eadf; border-top: 1px solid #d8c9b1; font-size: 13px; }
+.verbal-explanation strong { color: var(--red-dark); }
+.verbal-explanation p { margin: 4px 0 0; }
+.verbal-answer-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 9px; border-bottom: 1px solid #d9cdbb; }
+.verbal-answer-line strong { font: 700 17px var(--serif); }
+.verbal-answer-line span { padding: 2px 7px; color: #7d6034; background: #e8dcc8; font-size: 11px; }
+.verbal-explanation section { margin-top: 11px; }
+.verbal-explanation h4 { margin: 0; color: #4d463c; font: 700 14px var(--serif); }
+.verbal-option-analysis { margin: 9px 0 0; padding: 0; display: grid; gap: 6px; list-style: none; }
+.verbal-option-analysis li { padding: 7px 9px; display: grid; grid-template-columns: 76px 1fr; gap: 8px; background: rgba(255,255,255,.58); border-left: 2px solid #b9ad9b; }
+.verbal-option-analysis li.is-answer { background: #edf5ed; border-left-color: #4f8762; }
+.verbal-option-analysis li strong { color: #51493f; }
+.verbal-option-analysis li.is-answer strong { color: #356044; }
+.verbal-error-point { margin-top: 11px; padding: 8px 10px; color: #7d4a28; background: #f7e6cf; border-left: 3px solid #c68b3b; }
+.verbal-error-point strong { color: #8f4d20; }
 .news-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding-top: 13px; border-top: 1px dotted #c9c2b7; }
 .action-btn { padding: 4px 0; border: 0; color: #716b63; background: transparent; text-decoration: none; font-size: 13px; }
 .action-btn:hover, .action-btn.collected, .source-link:hover { color: var(--red); }
@@ -250,6 +284,9 @@ button { cursor: pointer; }
   .knowledge-overview { grid-template-columns: 1fr; gap: 5px; }
   .knowledge-heading { align-items: stretch; flex-direction: column; }
   .knowledge-copy-btn { align-self: start; }
+  .verbal-options { grid-template-columns: 1fr; }
+  .verbal-footer { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .verbal-option-analysis li { grid-template-columns: 1fr; gap: 2px; }
   .learning-desk { padding: 20px 16px; }
   .learning-desk-heading { align-items: start; flex-direction: column; }
   .learning-desk-heading > p { display: none; }
